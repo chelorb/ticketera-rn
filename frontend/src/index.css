@@ -1,0 +1,42 @@
+/* src/index.css */
+/* Tailwind inyecta sus estilos base, componentes y utilidades acá */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos globales propios */
+@layer base {
+  /* Transiciones suaves en todos los elementos interactivos */
+  button, a, input, select, textarea {
+    @apply transition-all duration-150;
+  }
+
+  /* Scrollbar más sutil en navegadores WebKit (Chrome, Safari) */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full;
+  }
+}
+
+/* Clase utilitaria para inputs del formulario — la reutilizamos en varios forms */
+@layer components {
+  .input-field {
+    @apply w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm
+           focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent
+           placeholder:text-gray-400;
+  }
+  .btn-primary {
+    @apply bg-brand-500 hover:bg-brand-700 text-white font-medium py-2.5 px-6
+           rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium
+           py-2.5 px-6 rounded-lg transition-colors;
+  }
+}

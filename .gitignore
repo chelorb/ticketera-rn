@@ -1,0 +1,25 @@
+# Dependencias (se instalan con npm install, no se suben)
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Variables de entorno (contienen claves secretas, NUNCA al repo)
+.env
+.env.local
+.env.production
+
+# Archivos de build (se generan automáticamente)
+dist/
+build/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/
+.idea/
