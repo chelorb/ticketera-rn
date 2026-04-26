@@ -6,6 +6,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
+import { ThemeProvider } from './context/ThemeContext'
 import ProtectedRoute from './components/ProtectedRoute'
 
 // Páginas públicas
@@ -30,8 +31,9 @@ export default function App() {
       de Cart podrían necesitar saber si hay sesión.
     */
     <BrowserRouter>
-      <AuthProvider>
-        <CartProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <CartProvider>
           <Routes>
 
             {/* ── Rutas públicas ── */}
@@ -78,6 +80,7 @@ export default function App() {
           </Routes>
         </CartProvider>
       </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   )
 }

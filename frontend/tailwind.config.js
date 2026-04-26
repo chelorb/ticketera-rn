@@ -3,6 +3,9 @@
 // Solo se incluyen las clases que realmente usamos (tree-shaking automático).
 
 export default {
+  // 'class' significa que el modo oscuro se activa agregando la clase "dark" al <html>
+  // (en vez de depender solo de la preferencia del sistema operativo)
+  darkMode: 'class',
   content: [
     './index.html',
     './src/**/*.{js,jsx}', // Todos los archivos JS/JSX de la carpeta src
