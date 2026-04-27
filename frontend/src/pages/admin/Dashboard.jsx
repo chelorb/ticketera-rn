@@ -146,6 +146,19 @@ export default function Dashboard() {
                 <p className="font-medium text-gray-900 dark:text-white text-sm">📷 Validador QR</p>
                 <p className="text-xs text-gray-400 mt-1">Escanear entradas en la puerta</p>
               </Link>
+              <Link to="/admin/pendientes" className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 hover:border-brand-200 dark:hover:border-brand-700 transition-colors relative">
+                <p className="font-medium text-gray-900 dark:text-white text-sm">⏳ Eventos pendientes</p>
+                <p className="text-xs text-gray-400 mt-1">Revisar y aprobar eventos de organizadores</p>
+                {stats?.pending_approval > 0 && (
+                  <span className="absolute top-3 right-3 bg-amber-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                    {stats.pending_approval}
+                  </span>
+                )}
+              </Link>
+              <Link to="/admin/organizadores" className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4 hover:border-brand-200 dark:hover:border-brand-700 transition-colors">
+                <p className="font-medium text-gray-900 dark:text-white text-sm">👤 Organizadores</p>
+                <p className="text-xs text-gray-400 mt-1">Crear y gestionar accesos</p>
+              </Link>
             </div>
           </>
         )}

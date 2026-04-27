@@ -1,85 +1,113 @@
 // src/App.jsx
-// Componente raíz de la aplicación.
-// Define todas las rutas usando React Router v6 y envuelve todo
-// con los Providers de contexto (Auth y Cart).
+// Rutas principales. Incluye portal de organizadores y flujo de aprobación.
 
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 import { ThemeProvider } from './context/ThemeContext'
-import ProtectedRoute from './components/ProtectedRoute'
 
 // Páginas públicas
 import Home        from './pages/Home'
 import EventDetail from './pages/EventDetail'
 import Checkout    from './pages/Checkout'
 import Success     from './pages/Success'
-import Login       from './pages/Login'
 
-// Páginas de admin (protegidas)
-import Dashboard   from './pages/admin/Dashboard'
-import EventForm   from './pages/admin/EventForm'
-import TicketList  from './pages/admin/TicketList'
+// Admin
+import Dashboard     from './pages/admin/Dashboard'
+import EventForm     from './pages/admin/EventForm'
+import TicketList    from './pages/admin/TicketList'
+import PendingEvents from './pages/admin/PendingEvents'
+import Organizers    from './pages/admin/Organizers'
+
+// Organizadores
+import OrganizerLogin     from './pages/organizer/OrganizerLogin'
+import OrganizerDashboard from './pages/organizer/OrganizerDashboard'
+import OrganizerEventForm from './pages/organizer/OrganizerEventForm'
+
+// ── Guards de ruta ────────────────────────────────────────────────────────────
+
+// Protege rutas del admin — redirige al login del organizador si no es admin
+function AdminRoute({ children }) {
+  const { isAdmin, loading } = useAuth()
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400 text-sm">Verificando sesión...</div>
+  if (!isAdmin) return <Navigate to="/organizer/login" replace />
+  return children
+}
+
+// Protege rutas del organizador — redirige al login si no está autenticado como organizer
+function OrganizerRoute({ children }) {
+  const { isOrganizer, loading } = useAuth()
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400 text-sm">Verificando sesión...</div>
+  if (!isOrganizer) return <Navigate to="/organizer/login" replace />
+  return children
+}
 
 export default function App() {
   return (
-    /*
-      BrowserRouter: habilita el enrutamiento basado en la URL del navegador.
-      AuthProvider: provee el estado de sesión a toda la app.
-      CartProvider: provee el estado del carrito a toda la app.
-      El orden importa: AuthProvider va primero porque algunos componentes
-      de Cart podrían necesitar saber si hay sesión.
-    */
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
           <CartProvider>
-          <Routes>
+            <Routes>
 
-            {/* ── Rutas públicas ── */}
-            <Route path="/"                  element={<Home />} />
-            <Route path="/eventos/:id"       element={<EventDetail />} />
-            <Route path="/checkout"          element={<Checkout />} />
-            <Route path="/confirmacion"      element={<Success />} />
-            <Route path="/login"             element={<Login />} />
+              {/* ── Sitio público ── */}
+              <Route path="/"             element={<Home />} />
+              <Route path="/eventos/:id"  element={<EventDetail />} />
+              <Route path="/checkout"     element={<Checkout />} />
+              <Route path="/confirmacion" element={<Success />} />
 
-            {/* ── Rutas del admin (protegidas con JWT) ── */}
-            {/*
-              ProtectedRoute verifica que haya sesión activa.
-              Si no hay sesión, redirige automáticamente a /login.
-            */}
-            <Route path="/admin" element={
-              <ProtectedRoute><Dashboard /></ProtectedRoute>
-            } />
-            <Route path="/admin/eventos/nuevo" element={
-              <ProtectedRoute><EventForm /></ProtectedRoute>
-            } />
-            <Route path="/admin/eventos/:id/editar" element={
-              <ProtectedRoute><EventForm /></ProtectedRoute>
-            } />
-            <Route path="/admin/entradas" element={
-              <ProtectedRoute><TicketList /></ProtectedRoute>
-            } />
-            {/* El validador QR está dentro de TicketList (como tab) */}
-            <Route path="/admin/validador" element={
-              <ProtectedRoute><TicketList /></ProtectedRoute>
-            } />
+              {/* ── Portal de organizadores ── */}
+              {/* URL separada, no linkeada desde el sitio público */}
+              <Route path="/organizer/login" element={<OrganizerLogin />} />
+              <Route path="/organizer/dashboard" element={
+                <OrganizerRoute><OrganizerDashboard /></OrganizerRoute>
+              } />
+              <Route path="/organizer/eventos/nuevo" element={
+                <OrganizerRoute><OrganizerEventForm /></OrganizerRoute>
+              } />
+              <Route path="/organizer/eventos/:id/editar" element={
+                <OrganizerRoute><OrganizerEventForm /></OrganizerRoute>
+              } />
 
-            {/* ── Ruta 404 ── */}
-            <Route path="*" element={
-              <div className="min-h-screen flex items-center justify-center text-center px-4">
-                <div>
-                  <p className="text-6xl mb-4">🎫</p>
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">Página no encontrada</h1>
-                  <p className="text-gray-500 mb-6">La URL que ingresaste no existe.</p>
-                  <a href="/" className="btn-primary text-sm">Ir al inicio</a>
+              {/* ── Panel admin (protegido) ── */}
+              {/* El link de Admin ya no aparece en el Navbar público */}
+              <Route path="/admin" element={
+                <AdminRoute><Dashboard /></AdminRoute>
+              } />
+              <Route path="/admin/eventos/nuevo" element={
+                <AdminRoute><EventForm /></AdminRoute>
+              } />
+              <Route path="/admin/eventos/:id/editar" element={
+                <AdminRoute><EventForm /></AdminRoute>
+              } />
+              <Route path="/admin/entradas" element={
+                <AdminRoute><TicketList /></AdminRoute>
+              } />
+              <Route path="/admin/validador" element={
+                <AdminRoute><TicketList /></AdminRoute>
+              } />
+              <Route path="/admin/pendientes" element={
+                <AdminRoute><PendingEvents /></AdminRoute>
+              } />
+              <Route path="/admin/organizadores" element={
+                <AdminRoute><Organizers /></AdminRoute>
+              } />
+
+              {/* ── 404 ── */}
+              <Route path="*" element={
+                <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center text-center px-4">
+                  <div>
+                    <p className="text-6xl mb-4">🎫</p>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Página no encontrada</h1>
+                    <p className="text-gray-500 mb-6">La URL que ingresaste no existe.</p>
+                    <a href="/" className="btn-primary text-sm">Ir al inicio</a>
+                  </div>
                 </div>
-              </div>
-            } />
+              } />
 
-          </Routes>
-        </CartProvider>
-      </AuthProvider>
+            </Routes>
+          </CartProvider>
+        </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
   )
