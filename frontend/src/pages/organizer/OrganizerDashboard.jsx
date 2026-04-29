@@ -33,7 +33,7 @@ export default function OrganizerDashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    getOrganizerEvents(user.id)
+    getOrganizerEvents()
       .then(setEvents)
       .finally(() => setLoading(false))
   }, [user.id])

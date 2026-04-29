@@ -1,0 +1,13 @@
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=ticketera_rn
+DB_USER=ticketera_user
+DB_PASSWORD=ticketera123
+PORT=3001
+NODE_ENV=development
+JWT_SECRET=clave_secreta_cambiar_en_produccion_123456789
+JWT_EXPIRES_IN=7d
+EMAIL_USER=demo@gmail.com
+EMAIL_PASSWORD=sin_configurar
+EMAIL_FROM=TicketeraRN
+FRONTEND_URL=http://localhost:5173
