@@ -43,7 +43,10 @@ export default function Checkout() {
       const result = await purchaseTicket({ ...form, event_id: cart.event.id, event_title: cart.event.title, event_date: cart.event.date, ticket_type_id: cart.ticketType.id, ticket_type_name: cart.ticketType.name, quantity: cart.quantity, total: cart.subtotal + cart.serviceFee })
       clearCart()
       navigate('/confirmacion', { state: { ticket: result.ticket } })
-    } catch { setErrors({ general: 'Error al procesar la compra. Intentá de nuevo.' }) }
+    } catch (err) { 
+  console.error('Error en compra:', err)
+  setErrors({ general: err.response?.data?.error || 'Error al procesar la compra. Intentá de nuevo.' }) 
+}
     finally { setLoading(false) }
   }
 

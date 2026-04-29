@@ -76,16 +76,21 @@ async function purchaseTicket(req, res) {
     const qrImageBase64 = await generateQRBase64(qrCode)
 
     sendTicketEmail({
-      buyerEmail:     buyer_email,
-      buyerName:      buyer_name,
-      eventTitle:     event.title,
-      eventDate:      event.date,
-      ticketType:     ticketType.name,
-      quantity,
-      totalPaid,
-      qrCode,
-      qrImageBase64,
-    }).catch(err => console.error('Error enviando email de ticket:', err))
+  buyerEmail:     buyer_email,
+  buyerName:      buyer_name,
+  eventTitle:     event.title,
+  eventDate:      event.date,
+  ticketType:     ticketType.name,
+  quantity,
+  totalPaid,
+  qrCode,
+  qrImageBase64,
+}).then(() => {
+  console.log('✅ Email enviado a:', buyer_email)
+}).catch(err => {
+  console.error('❌ Error enviando email:', err.message)
+  console.error('Detalle:', err)
+})
 
     res.status(201).json({
       success: true,
