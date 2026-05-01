@@ -7,17 +7,22 @@ const nodemailer = require('nodemailer')
 // Creamos el transporter (el "enviador" de emails)
 // En producción usa Gmail; en desarrollo puede usar una cuenta de prueba
 function createTransporter() {
-  // Si no hay credenciales configuradas, usamos un modo "fake" que imprime en consola
-  if (!process.env.EMAIL_USER || process.env.EMAIL_USER === 'tu_email@gmail.com') {
-    console.log('⚠️  Email no configurado — los emails se mostrarán en consola')
+  const emailUser = process.env.EMAIL_USER
+  const emailPass = process.env.EMAIL_PASSWORD
+
+  console.log('📧 EMAIL_USER:', emailUser || 'NO CONFIGURADO')
+  console.log('📧 EMAIL_PASS:', emailPass ? `OK (${emailPass.length} chars)` : 'NO CONFIGURADA')
+
+  if (!emailUser || emailUser === 'tu_email@gmail.com' || !emailPass || emailPass === 'sin_configurar') {
+    console.log('⚠️  Email no configurado')
     return null
   }
 
   return nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASSWORD,  // Contraseña de aplicación, NO la contraseña normal
+      user: emailUser,
+      pass: emailPass,
     },
   })
 }
