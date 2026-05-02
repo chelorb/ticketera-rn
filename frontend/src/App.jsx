@@ -23,6 +23,7 @@ import Organizers    from './pages/admin/Organizers'
 import OrganizerLogin     from './pages/organizer/OrganizerLogin'
 import OrganizerDashboard from './pages/organizer/OrganizerDashboard'
 import OrganizerEventForm from './pages/organizer/OrganizerEventForm'
+import ChangePassword    from './pages/organizer/ChangePassword'
 
 // ── Guards de ruta ────────────────────────────────────────────────────────────
 
@@ -35,10 +36,13 @@ function AdminRoute({ children }) {
 }
 
 // Protege rutas del organizador — redirige al login si no está autenticado como organizer
+// Si must_change_password=true, redirige a cambio de contraseña obligatorio
 function OrganizerRoute({ children }) {
-  const { isOrganizer, loading } = useAuth()
+  const { user, isOrganizer, loading } = useAuth()
   if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400 text-sm">Verificando sesión...</div>
   if (!isOrganizer) return <Navigate to="/organizer/login" replace />
+  // Si es primer ingreso, obligamos a cambiar la contraseña
+  if (user?.must_change_password) return <Navigate to="/organizer/change-password" replace />
   return children
 }
 
@@ -59,6 +63,7 @@ export default function App() {
               {/* ── Portal de organizadores ── */}
               {/* URL separada, no linkeada desde el sitio público */}
               <Route path="/organizer/login" element={<OrganizerLogin />} />
+              <Route path="/organizer/change-password" element={<ChangePassword />} />
               <Route path="/organizer/dashboard" element={
                 <OrganizerRoute><OrganizerDashboard /></OrganizerRoute>
               } />
