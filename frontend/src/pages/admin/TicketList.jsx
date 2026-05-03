@@ -1,12 +1,15 @@
 // src/pages/admin/TicketList.jsx
-// Lista de entradas vendidas + Validador QR — con dark mode y responsive.
+// Lista de entradas vendidas + Validador QR con cámara real.
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { getAllTickets, validateTicket } from '../../api'
+import QrScanner from '../../components/QrScanner'
 
 function formatDate(isoString) {
-  return new Date(isoString).toLocaleString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  return new Date(isoString).toLocaleString('es-AR', {
+    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+  })
 }
 function formatPrice(n) { return '$' + n.toLocaleString('es-AR') }
 
@@ -21,22 +24,55 @@ export default function TicketList() {
   const [tickets, setTickets] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('tickets')
-  const [qrInput, setQrInput] = useState('')
+
+  // Validador
+  const [scanMode, setScanMode] = useState('camera') // 'camera' | 'manual'
+  const [manualInput, setManualInput] = useState('')
   const [validating, setValidating] = useState(false)
   const [validationResult, setValidationResult] = useState(null)
+  const [lastScanned, setLastScanned] = useState('') // Para evitar doble escaneo
 
-  useEffect(() => { getAllTickets().then(setTickets).finally(() => setLoading(false)) }, [])
+  useEffect(() => {
+    getAllTickets().then(setTickets).finally(() => setLoading(false))
+  }, [])
 
-  const handleValidate = async () => {
-    if (!qrInput.trim()) return
-    setValidating(true); setValidationResult(null)
-    try { setValidationResult(await validateTicket(qrInput.trim())) }
-    catch { setValidationResult({ valid: false, reason: 'Error al validar' }) }
-    finally { setValidating(false) }
+  // Cuando la cámara detecta un QR
+  const handleScan = async (qrCode) => {
+    // Evitamos procesar el mismo QR dos veces seguidas
+    if (qrCode === lastScanned || validating) return
+    setLastScanned(qrCode)
+    await doValidate(qrCode)
+    // Permitimos escanear otro QR después de 4 segundos
+    setTimeout(() => setLastScanned(''), 4000)
+  }
+
+  const handleManualValidate = async () => {
+    if (!manualInput.trim()) return
+    await doValidate(manualInput.trim())
+  }
+
+  const doValidate = async (qrCode) => {
+    setValidating(true)
+    setValidationResult(null)
+    try {
+      const result = await validateTicket(qrCode)
+      setValidationResult({ ...result, qrCode })
+    } catch {
+      setValidationResult({ valid: false, reason: 'Error al validar', qrCode })
+    } finally {
+      setValidating(false)
+    }
+  }
+
+  const resetValidator = () => {
+    setValidationResult(null)
+    setManualInput('')
+    setLastScanned('')
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      {/* Navbar */}
       <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-6 h-14 flex items-center justify-between">
         <Link to="/admin" className="font-semibold text-gray-900 dark:text-white">🎟️ TicketeraRN</Link>
         <Link to="/admin" className="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">← Dashboard</Link>
@@ -46,14 +82,16 @@ export default function TicketList() {
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 w-fit">
           {[['tickets','🎫 Entradas vendidas'],['validator','📷 Validador QR']].map(([key, label]) => (
-            <button key={key} onClick={() => setActiveTab(key)}
-              className={`text-sm px-4 py-2 rounded-lg transition-all ${activeTab === key ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-medium shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
+            <button key={key} onClick={() => { setActiveTab(key); resetValidator() }}
+              className={`text-sm px-4 py-2 rounded-lg transition-all ${activeTab === key
+                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-medium shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'}`}>
               {label}
             </button>
           ))}
         </div>
 
-        {/* Tab: Entradas */}
+        {/* ── Tab: Entradas ── */}
         {activeTab === 'tickets' && (
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-50 dark:border-gray-700">
@@ -95,51 +133,82 @@ export default function TicketList() {
           </div>
         )}
 
-        {/* Tab: Validador */}
+        {/* ── Tab: Validador ── */}
         {activeTab === 'validator' && (
           <div className="max-w-md mx-auto">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
-              <h2 className="font-semibold text-gray-900 dark:text-white mb-1">Validador de QR</h2>
-              <p className="text-xs text-gray-400 mb-6">
-                Ingresá el código manualmente o conectá un lector QR físico. La validación por cámara se habilitará en producción.
-              </p>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
+              <h2 className="font-semibold text-gray-900 dark:text-white mb-1">Validador de entradas</h2>
+              <p className="text-xs text-gray-400 mb-4">Escaneá el QR con la cámara o ingresalo manualmente</p>
 
-              <div className="flex gap-2 mb-4">
-                <input value={qrInput} onChange={e => setQrInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleValidate()}
-                  placeholder="Ej: TKT-2025-00847-A"
-                  className="input-field flex-1 font-mono text-sm" disabled={validating} />
-                <button onClick={handleValidate} disabled={validating || !qrInput.trim()} className="btn-primary text-sm px-4">
-                  {validating ? '...' : 'Validar'}
-                </button>
+              {/* Toggle cámara / manual */}
+              <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 rounded-xl p-1 mb-4">
+                {[['camera','📷 Cámara'],['manual','⌨️ Manual']].map(([key, label]) => (
+                  <button key={key} onClick={() => { setScanMode(key); resetValidator() }}
+                    className={`flex-1 text-sm py-2 rounded-lg transition-all ${scanMode === key
+                      ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-medium shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'}`}>
+                    {label}
+                  </button>
+                ))}
               </div>
 
-              {validationResult ? (
-                <div className={`rounded-xl p-5 text-center ${validationResult.valid ? 'bg-brand-50 dark:bg-brand-900/20 border border-brand-100 dark:border-brand-900' : 'bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900'}`}>
-                  <div className="text-4xl mb-3">{validationResult.valid ? '✅' : '❌'}</div>
+              {/* Resultado de validación */}
+              {validationResult && (
+                <div className={`rounded-xl p-5 text-center mb-4 ${validationResult.valid
+                  ? 'bg-brand-50 dark:bg-brand-900/20 border border-brand-100 dark:border-brand-900'
+                  : 'bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900'}`}>
+                  <div className="text-4xl mb-2">{validationResult.valid ? '✅' : '❌'}</div>
                   {validationResult.valid ? (
                     <>
-                      <p className="font-semibold text-brand-700 dark:text-brand-300 text-lg mb-2">¡Entrada válida!</p>
-                      <p className="text-sm text-brand-600 dark:text-brand-400 font-medium">{validationResult.ticket.buyer_name}</p>
-                      <p className="text-xs text-brand-500 mt-1">{validationResult.ticket.event_title}</p>
-                      <p className="text-xs text-brand-500">{validationResult.ticket.ticket_type}</p>
+                      <p className="font-bold text-brand-700 dark:text-brand-300 text-lg mb-1">¡Entrada válida!</p>
+                      <p className="text-sm font-medium text-brand-600 dark:text-brand-400">{validationResult.ticket?.buyer_name}</p>
+                      <p className="text-xs text-brand-500 mt-1">{validationResult.ticket?.event_title}</p>
+                      <p className="text-xs text-brand-500">{validationResult.ticket?.ticket_type}</p>
                     </>
                   ) : (
                     <>
-                      <p className="font-semibold text-red-600 dark:text-red-400 text-lg mb-2">Entrada inválida</p>
+                      <p className="font-bold text-red-600 dark:text-red-400 text-lg mb-1">Entrada inválida</p>
                       <p className="text-sm text-red-500">{validationResult.reason}</p>
                     </>
                   )}
-                  <button onClick={() => { setQrInput(''); setValidationResult(null) }} className="mt-4 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 underline">
-                    Validar otra entrada
+                  <button onClick={resetValidator}
+                    className="mt-3 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 underline">
+                    Escanear otra entrada
                   </button>
                 </div>
-              ) : (
-                <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg text-xs text-gray-400">
-                  <p className="font-medium text-gray-500 dark:text-gray-400 mb-1">Códigos de prueba:</p>
-                  <p>✅ TKT-2025-00847-A → Válida</p>
-                  <p>❌ TKT-2025-00848-B → Ya utilizada</p>
-                  <p>❌ Cualquier otro → No encontrada</p>
+              )}
+
+              {/* Modo cámara */}
+              {scanMode === 'camera' && !validationResult && (
+                <div>
+                  {validating ? (
+                    <div className="bg-gray-100 dark:bg-gray-900 rounded-2xl h-48 flex items-center justify-center">
+                      <p className="text-gray-500 text-sm">Validando...</p>
+                    </div>
+                  ) : (
+                    <QrScanner onScan={handleScan} />
+                  )}
+                </div>
+              )}
+
+              {/* Modo manual */}
+              {scanMode === 'manual' && !validationResult && (
+                <div>
+                  <div className="flex gap-2">
+                    <input
+                      value={manualInput}
+                      onChange={e => setManualInput(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleManualValidate()}
+                      placeholder="Ej: TKT-20250614-ABC123"
+                      className="input-field flex-1 font-mono text-sm"
+                      disabled={validating}
+                    />
+                    <button onClick={handleManualValidate}
+                      disabled={validating || !manualInput.trim()}
+                      className="btn-primary text-sm px-4">
+                      {validating ? '...' : 'Validar'}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
