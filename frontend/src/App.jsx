@@ -9,7 +9,6 @@ import { ThemeProvider } from './context/ThemeContext'
 // Páginas públicas
 import Home        from './pages/Home'
 import Validator    from './pages/Validator'
-import Validator    from './pages/Validator'
 import EventDetail from './pages/EventDetail'
 import Checkout    from './pages/Checkout'
 import Success     from './pages/Success'
