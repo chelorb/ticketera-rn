@@ -9,6 +9,7 @@ import { ThemeProvider } from './context/ThemeContext'
 // Páginas públicas
 import Home        from './pages/Home'
 import Validator    from './pages/Validator'
+import Validator    from './pages/Validator'
 import EventDetail from './pages/EventDetail'
 import Checkout    from './pages/Checkout'
 import Success     from './pages/Success'
@@ -59,6 +60,7 @@ export default function App() {
               <Route path="/"             element={<Home />} />
               <Route path="/eventos/:id"  element={<EventDetail />} />
               <Route path="/checkout"     element={<Checkout />} />
+              <Route path="/validador"         element={<Validator />} />
               <Route path="/confirmacion" element={<Success />} />
 
               {/* ── Portal de organizadores ── */}
